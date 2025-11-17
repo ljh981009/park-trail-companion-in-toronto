@@ -1,1 +1,1 @@
-# Park-Trail-Companion-in-Toronto
+# park-trail-companion-in-toronto
