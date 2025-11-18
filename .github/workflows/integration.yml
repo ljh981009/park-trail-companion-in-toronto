@@ -1,4 +1,4 @@
-name: CI & Deploy 🚀
+name: CI & Deploy 🚀 (Optimized Cache)
 
 on:
   pull_request:
@@ -15,6 +15,22 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v5
+
+      - name: Node modules cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Next.js build cache
+        uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: ${{ runner.os }}-next-${{ github.ref }}-${{ hashFiles('**/*.js', '**/*.ts', '**/*.tsx', '**/*.json') }}
+          restore-keys: |
+            ${{ runner.os }}-next-
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
