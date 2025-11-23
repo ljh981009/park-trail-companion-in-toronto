@@ -3,11 +3,9 @@
 import { Search, X, SlidersHorizontal } from "lucide-react";
 import { parkTypes, parkFeatures } from "../constants";
 import type { FilterState } from "../types";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@radix-ui/react-checkbox";
-import { Slider } from "@radix-ui/react-slider";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Badge } from "./ui/badge";
 
 interface FilterPanelProps {
   show: boolean;
@@ -139,11 +137,10 @@ export function FilterPanel({
                     ? "default"
                     : "outline"
                 }
-                className={`cursor-pointer w-fit transition-colors ${
-                  filters.selectedFeatures.includes(feature)
-                    ? "bg-[#0C6A3D] text-white hover:bg-[#0C6A3D]/90"
-                    : "hover:bg-[#E9F5EC] hover:border-[#0C6A3D]"
-                }`}
+                className={`cursor-pointer w-fit transition-colors ${filters.selectedFeatures.includes(feature)
+                  ? "bg-[#0C6A3D] text-white hover:bg-[#0C6A3D]/90"
+                  : "hover:bg-[#E9F5EC] hover:border-[#0C6A3D]"
+                  }`}
                 onClick={() => toggleFeature(feature)}
               >
                 {feature}
@@ -157,10 +154,10 @@ export function FilterPanel({
           filters.selectedTypes.length > 0 ||
           filters.selectedFeatures.length > 0 ||
           filters.maxDistance < 10) && (
-          <Button variant="outline" className="w-full" onClick={clearFilters}>
-            Clear All Filters
-          </Button>
-        )}
+            <Button variant="outline" className="w-full" onClick={clearFilters}>
+              Clear All Filters
+            </Button>
+          )}
       </div>
     </div>
   );
