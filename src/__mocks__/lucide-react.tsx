@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Icon = (props: any) => <svg data-testid="icon" {...props} />;
+const Icon = (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="icon" {...props} />;
 
 export const Search = Icon;
 export const X = Icon;
