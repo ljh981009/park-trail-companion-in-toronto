@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import MapClient from "../components/MapClient";
+import MapClient from "../components/MapClient.client";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 
 export default function Home() {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { FilterPanel } from '../FilterPanel';
+import { FilterPanel } from '../FilterPanel.client';
 import { mockFilterState } from '../../__mocks__/data';
 
 describe('FilterPanel', () => {

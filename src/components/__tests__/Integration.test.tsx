@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import MapClient from '../MapClient';
+import MapClient from '../MapClient.client';
 
 // Mock the child components to focus on integration logic or keep them real if we want full integration.
 // For "integration" in this context (testing MapClient's state management with its children),
