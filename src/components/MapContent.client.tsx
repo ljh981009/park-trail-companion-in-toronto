@@ -76,6 +76,8 @@ export default function MapContent({ selectedPark, onSelectPark }: MapContentPro
     staleTime: 1000 * 60 * 10, // 10분 캐싱
   });
 
+  console.log('parks', parks);
+
   const center: [number, number] = [43.6532, -79.3832];
 
   const handleParkClick = useCallback((park: Park) => {

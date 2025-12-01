@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FilterState } from "../types";
+import { FilterState, Park } from "../types";
 import { Header } from "./Header";
 import { FilterPanel } from "./FilterPanel.client";
 import dynamic from "next/dynamic";
@@ -13,6 +13,7 @@ const MapContent = dynamic(() => import("./MapContent.client"), {
 
 export default function MapClient() {
   const [showFilters, setShowFilters] = useState(true);
+  const [selectedPark, setSelectedPark] = useState<Park | null>(null);
 
   const [filters, setFilters] = useState<FilterState>({
     searchQuery: "",
@@ -32,7 +33,9 @@ export default function MapClient() {
           onClose={() => setShowFilters(false)}
         />
         <div className="flex-1 relative h-full">
-          <MapContent />
+          <MapContent 
+           selectedPark={selectedPark}
+          onSelectPark={setSelectedPark}/>
         </div>
       </div>
     </>
