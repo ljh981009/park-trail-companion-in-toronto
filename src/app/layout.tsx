@@ -1,19 +1,18 @@
-import type { Metadata } from "next";
-import "./globals.css";
+import './globals.css';
+import ReactQueryProvider from '@/providers/ReactQueryProvider';
+import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: "Parks & Trails Companion",
-  description: "Parks & Trails Companion",
+  title: 'Parks & Trails Companion',
+  description: 'Explore Toronto parks and trails via open data.',
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="bg-[#E9F5EC]">{children}</body>
+      <body>
+        <ReactQueryProvider>{children}</ReactQueryProvider>
+      </body>
     </html>
   );
 }
