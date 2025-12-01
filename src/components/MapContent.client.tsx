@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -38,6 +38,32 @@ function MapController({ selectedPark }: { selectedPark: Park | null }) {
   return null;
 }
 
+interface ParkMarkersProps {
+  parks: Park[];
+  onParkClick: (park: Park) => void;
+}
+
+function ParkMarkers({ parks, onParkClick }: ParkMarkersProps) {
+  return (
+    <>
+      {parks.map((park) => (
+        <Marker
+          key={park.id}
+          position={[park.lat, park.lng]}
+          eventHandlers={{ click: () => onParkClick(park) }}
+        >
+          <Popup>
+            <div className="p-2">
+              <h3 className="font-bold">{park.name}</h3>
+              <p className="text-sm">{park.address}</p>
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+    </>
+  );
+}
+
 interface MapContentProps {
   selectedPark: Park | null;
   onSelectPark: (park: Park) => void;
@@ -51,6 +77,10 @@ export default function MapContent({ selectedPark, onSelectPark }: MapContentPro
   });
 
   const center: [number, number] = [43.6532, -79.3832];
+
+  const handleParkClick = useCallback((park: Park) => {
+    onSelectPark(park);
+  }, [onSelectPark]);
 
   const mapDisplay = useMemo(() => {
     if (!parks) return null;
@@ -66,23 +96,10 @@ export default function MapContent({ selectedPark, onSelectPark }: MapContentPro
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <MapController selectedPark={selectedPark} />
-        {parks.map((park) => (
-          <Marker
-            key={park.id}
-            position={[park.lat, park.lng]}
-            eventHandlers={{ click: () => onSelectPark(park) }}
-          >
-            <Popup>
-              <div className="p-2">
-                <h3 className="font-bold">{park.name}</h3>
-                <p className="text-sm">{park.address}</p>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+        <ParkMarkers parks={parks} onParkClick={handleParkClick} />
       </MapContainer>
     );
-  }, [parks, selectedPark, onSelectPark]);
+  }, [parks, selectedPark, handleParkClick]);
 
   if (isLoading)
     return <div className="flex items-center justify-center h-full">Loading parks...</div>;
