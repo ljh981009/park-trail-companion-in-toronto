@@ -1,112 +1,109 @@
-'use client';
+"use client";
 
-import dynamic from 'next/dynamic';
-import { useMemo, useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import { useMap } from 'react-leaflet';
-import type { Park } from '@/types';
-import { fetchParks } from '@/lib/api';
+import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
+import { useQuery } from "@tanstack/react-query";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 
-// ✅ Lazy-load leaflet (Next.js에서 SSR 방지)
-const MapContainer = dynamic(() => import('react-leaflet').then((m) => m.MapContainer), { ssr: false });
-const TileLayer = dynamic(() => import('react-leaflet').then((m) => m.TileLayer), { ssr: false });
-const Marker = dynamic(() => import('react-leaflet').then((m) => m.Marker), { ssr: false });
-const Popup = dynamic(() => import('react-leaflet').then((m) => m.Popup), { ssr: false });
+export default function MapContent() {
+  // 두 가지 데이터를 병렬 요청
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["trailData"],
+    queryFn: async () => {
+      const [segmentsRes, accessRes] = await Promise.all([
+        fetch(
+          "https://ws.lioservices.lrc.gov.on.ca/arcgis2/rest/services/LIO_OPEN_DATA/LIO_Open04/MapServer/19/query?where=OBJECTID>0&outFields=*&outSR=4326&f=geojson"
+        ),
+        fetch(
+          "https://ws.lioservices.lrc.gov.on.ca/arcgis2/rest/services/LIO_OPEN_DATA/LIO_Open04/MapServer/20/query?where=OBJECTID>0&outFields=*&outSR=4326&f=geojson"
+        ),
+      ]);
 
-// ✅ Leaflet Marker 아이콘
-const iconUrl = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png';
-const iconRetinaUrl = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png';
-const shadowUrl = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png';
-const defaultIcon = L.icon({
-  iconUrl,
-  iconRetinaUrl,
-  shadowUrl,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
-L.Marker.prototype.options.icon = defaultIcon;
+      if (!segmentsRes.ok || !accessRes.ok) {
+        throw new Error("Failed to fetch trail data");
+      }
 
-function MapController({ selectedPark }: { selectedPark: Park | null }) {
-  const map = useMap();
-  if (selectedPark && map) {
-    map.setView([selectedPark.lat, selectedPark.lng], 14, { animate: true });
-  }
-  return null;
-}
+      const [segments, accessPoints] = await Promise.all([
+        segmentsRes.json(),
+        accessRes.json(),
+      ]);
 
-interface ParkMarkersProps {
-  parks: Park[];
-  onParkClick: (park: Park) => void;
-}
-
-function ParkMarkers({ parks, onParkClick }: ParkMarkersProps) {
-  return (
-    <>
-      {parks.map((park) => (
-        <Marker
-          key={park.id}
-          position={[park.lat, park.lng]}
-          eventHandlers={{ click: () => onParkClick(park) }}
-        >
-          <Popup>
-            <div className="p-2">
-              <h3 className="font-bold">{park.name}</h3>
-              <p className="text-sm">{park.address}</p>
-            </div>
-          </Popup>
-        </Marker>
-      ))}
-    </>
-  );
-}
-
-interface MapContentProps {
-  selectedPark: Park | null;
-  onSelectPark: (park: Park) => void;
-}
-
-export default function MapContent({ selectedPark, onSelectPark }: MapContentProps) {
-  const { data: parks, isLoading, isError } = useQuery({
-    queryKey: ['parks'],
-    queryFn: fetchParks,
-    staleTime: 1000 * 60 * 10, // 10분 캐싱
+      return { segments, accessPoints };
+    },
   });
 
-  console.log('parks', parks);
+  if (isLoading) return <p>Loading trails...</p>;
+  if (error) return <p>Failed to load trail data</p>;
 
-  const center: [number, number] = [43.6532, -79.3832];
+  // 스타일 정의
+  const segmentStyle: L.PathOptions = {
+    color: "#2E7D32", // 초록색
+    weight: 2,
+    opacity: 0.8,
+  };
 
-  const handleParkClick = useCallback((park: Park) => {
-    onSelectPark(park);
-  }, [onSelectPark]);
+  // 트레일 선 팝업
+  const onEachSegment = (feature: any, layer: L.Layer) => {
+    const props = feature.properties;
+    if (props?.TRAIL_NAME) {
+      layer.bindPopup(
+        `<b>${props.TRAIL_NAME}</b><br/>
+         ${props.DESCRIPTION ?? ""}<br/>
+         <i>${props.TRAIL_ASSOCIATION ?? ""}</i>`
+      );
+    }
+  };
 
-  const mapDisplay = useMemo(() => {
-    if (!parks) return null;
-    return (
-      <MapContainer
-        center={center}
-        zoom={12}
-        scrollWheelZoom
-        style={{ height: '100%', width: '100%' }}
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        <MapController selectedPark={selectedPark} />
-        <ParkMarkers parks={parks} onParkClick={handleParkClick} />
-      </MapContainer>
+  // 접근 포인트 마커
+  const accessPointToLayer = (feature: any, latlng: L.LatLng) => {
+    return L.circleMarker(latlng, {
+      radius: 4,
+      fillColor: "#1976D2", // 파란색
+      color: "#fff",
+      weight: 1,
+      fillOpacity: 0.9,
+    });
+  };
+
+  const onEachAccessPoint = (feature: any, layer: L.Layer) => {
+    const props = feature.properties;
+    layer.bindPopup(
+      `<b>Access Point</b><br/>
+       Accuracy: ${props.LOCATION_ACCURACY ?? "N/A"}<br/>
+       ID: ${props.OBJECTID}`
     );
-  }, [parks, selectedPark, handleParkClick]);
+  };
 
-  if (isLoading)
-    return <div className="flex items-center justify-center h-full">Loading parks...</div>;
-  if (isError)
-    return <div className="flex items-center justify-center h-full text-red-600">Failed to load data</div>;
+  console.log("data", data)
 
-  return mapDisplay;
+  return (
+    <MapContainer
+      center={[43.7, -79.4]} // Toronto 중심
+      zoom={11}
+      style={{ height: "100vh", width: "100%" }}
+    >
+      <TileLayer
+        attribution="&copy; OpenStreetMap contributors"
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+
+      {/* 트레일 라인 */}
+      {data?.segments && (
+        <GeoJSON
+          data={data.segments}
+          style={segmentStyle}
+          onEachFeature={onEachSegment}
+        />
+      )}
+
+      {/* 접근 포인트 */}
+      {data?.accessPoints && (
+        <GeoJSON
+          data={data.accessPoints}
+          pointToLayer={accessPointToLayer}
+          onEachFeature={onEachAccessPoint}
+        />
+      )}
+    </MapContainer>
+  );
 }

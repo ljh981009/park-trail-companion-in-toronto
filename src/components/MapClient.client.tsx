@@ -34,8 +34,9 @@ export default function MapClient() {
         />
         <div className="flex-1 relative h-full">
           <MapContent 
-           selectedPark={selectedPark}
-          onSelectPark={setSelectedPark}/>
+          //  selectedPark={selectedPark}
+          // onSelectPark={setSelectedPark}
+          />
         </div>
       </div>
     </>
